@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="style/style.css">
+
+    <style type="text/css" media="print">
+        .noprint {
+            display: none
+        }
+        
+        .print {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <header class="el-header noprint">
+            <div class="icon-btns">
+                <i class="icon-list" @click="changeLeftMenu"></i>
+                <i class="icon-skip_previous" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('first')"></i>
+                <i class="icon-play_arrow prev-icon" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('prev')"></i>
+                <i class="icon-play_arrow" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('next')"></i>
+                <i class="icon-skip_next" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('last')"></i>
+                <select v-model="currentPage">
+                    <option v-for="page in pageNum" v-bind:value="page">page {{ page }}</option>
+                </select>
+                <i class="icon-zoom_in" v-bind:class="{'disabled': zoomNum == 2}" @click="modifyZoom('in')"></i>
+                <select v-model="zoomNum">
+                    <option value="0.5">50%</option>
+                    <option value="0.6">60%</option>
+                    <option value="0.7">70%</option>
+                    <option value="0.8">80%</option>
+                    <option value="0.9">90%</option>
+                    <option value="1.0" selected>100%</option>
+                    <option value="1.1">110%</option>
+                    <option value="1.2">120%</option>
+                    <option value="1.3">130%</option>
+                    <option value="1.4">140%</option>
+                    <option value="1.5">150%</option>
+                    <option value="1.6">160%</option>
+                    <option value="1.7">170%</option>
+                    <option value="1.8">180%</option>
+                    <option value="1.9">190%</option>
+                    <option value="2.0">200%</option>
+                </select>
+                <i class="icon-zoom_out" v-bind:class="{'disabled': zoomNum == 0.5}" @click="modifyZoom('out')"></i>
+                <i class="icon-format_align_left" @click="textAlign = 'left'"></i>
+                <i class="icon-format_align_center" @click="textAlign = 'center'"></i>
+                <i class="icon-format_align_right" @click="textAlign = 'right'"></i>
+                <i class="icon-print" @click="window.print()"></i>
+            </div>
+        </header>
+
+        <aside class="noprint" width="240px" v-show="ifMenuShow">
+            <nav class="tabNav">
+                <ul>
+                    <li v-bind:class="{ 'curr': currentNav == 0 }" @click="currentNav = 0">Page</li>
+                    <li v-bind:class="{ 'curr': currentNav == 1 }" @click="currentNav = 1">Bookmark</li>
+                </ul>
+
+                <div class="clear"></div>
+            </nav>
+
+            <div class="tab-conent scrollbar" v-bind:style="{ height: asideHeight + 'px' }">
+
+            <section v-show="currentNav == 0">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-file-text2"></i> page {{ page }}</li>
+                </ul>
+            </section>
+
+            <section v-show="currentNav == 1">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-turned_in_not"></i> Bookmark {{ page }}</li>
+                </ul>
+            </section>
+        </div>
+
+        </aside>
+        <div class="main scrollbar noprint"  v-bind:style="{ height: mainHeight + 'px' }" v-bind:class="{ 'mainLeftM': ifMenuShow, 'aleft': textAlign === 'left','acenter': textAlign === 'center','aright': textAlign === 'right'}">
+            <div class="conent" v-html="pageContent" v-bind:style="zoomStyle"></div>
+
+            <div class="clear"></div>
+        </div>
+
+        <!--专门只为打印的内容-->
+        <div class="conent print" style="display:none" v-html="pageContent"></div>
+    </div>
+</body>
+<!-- 先引入 Vue -->
+<script src="js/vue.min.js"></script>
+<script>
+
+var app = new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                // visible: false,
+                isCollapse: false,
+                currentNav: 0,
+                activeName2: 'first',
+                pageNum: 1, 
+                currentPage: 1,
+                pageContent: '',
+                asideHeight: 300,
+                mainHeight: 300,
+                ifMenuShow: true,
+                zoomNum: '1.0',
+                textAlign: 'left',
+                zoomStyle: {},
+                pageDatas: ['<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1123.000000" width="795.000000" src ="bgimg/bg00001.jpg"/></nobr></div><p><span style="font-family:Arial;font-size:10.541666px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:256.497955px;left:619.178894px"><nobr>01/11/2021 </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.541666px;font-weight:bold;color:#000000;"><span style="position:absolute;top:256.497955px;left:106.182533px"><nobr>TRAVEL INSURANCE COVID-19 LETTER: X21PSTE-6689796 </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.541666px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:287.620941px;left:106.182533px"><nobr>Please note that this letter must be read in conjunction with your certificate of insurance </nobr></span><span style="position:absolute;top:304.688385px;left:106.182533px"><nobr>issued on 01/11/2021 (covering travel between 08/11/2021 and 16/11/2021) which lists the </nobr></span><span style="position:absolute;top:321.755859px;left:106.182533px"><nobr>insured persons, cover level, optional cover and other information specific to your policy. </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.541666px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:355.890778px;left:106.182533px"><nobr>This letter confirms that your travel insurance policy includes £15,000,000 cover for </nobr></span><span style="position:absolute;top:372.958252px;left:106.182533px"><nobr>Emergency Medical expenses if you contract Coronavirus (SARS-CoV-2) whilst abroad. This </nobr></span><span style="position:absolute;top:390.025726px;left:106.182533px"><nobr>cover includes Emergency Medical and Repatriation Expenses, Funeral Expenses Abroad </nobr></span><span style="position:absolute;top:407.093170px;left:106.182533px"><nobr>and the cost of returning your body or ashes to the United Kingdom (please see your policy </nobr></span><span style="position:absolute;top:424.160553px;left:106.182533px"><nobr>wording for inner limits of cover). For more information on our Coronavirus cover please refer </nobr></span><span style="position:absolute;top:441.228088px;left:106.182533px"><nobr>to our webpage: <span style="text-decoration:underline;color:#0000EE;"><a href="https://www.coverforyou.com/coronavirus_cover.php" target="_blank">https://www.coverforyou.com/coronavirus_cover.php </a></span></nobr></span></span></p><p><span style="font-family:Arial;font-size:10.541666px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:475.363007px;left:106.182533px"><nobr>This confirmation is valid providing that you are not travelling to a country to which the </nobr></span><span style="position:absolute;top:492.430450px;left:106.182533px"><nobr>Foreign, Commonwealth &amp; Development Office (FCDO) advises against \'all\' travel, or against </nobr></span><span style="position:absolute;top:509.497925px;left:106.182533px"><nobr>the advice of the regulatory authorities of the country that you are due to be travelling to. If </nobr></span><span style="position:absolute;top:526.565369px;left:106.182533px"><nobr>you travel to a country to which the Foreign, Commonwealth and Development Office (FCDO) </nobr></span><span style="position:absolute;top:543.632813px;left:106.182533px"><nobr>or other regulatory body are advising against all but essential travel and your trip is not </nobr></span><span style="position:absolute;top:560.700317px;left:106.182533px"><nobr>essential there is no cover for claims relating directly or indirectly to the reason the advice is </nobr></span><span style="position:absolute;top:577.767761px;left:106.182533px"><nobr>in place. Please see the following page for more information: </nobr></span><span style="position:absolute;top:594.835205px;left:106.182533px"><nobr><span style="text-decoration:underline;color:#0000EE;"><a href="https://www.coverforyou.com/fcdo_advice.php" target="_blank">https://www.coverforyou.com/fcdo_advice.php </a></span></nobr></span></span></p><p><span style="font-family:Arial;font-size:10.541666px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:628.970154px;left:106.182533px"><nobr>Please note your policy is currently valid for travel to the following destinations: All countries </nobr></span><span style="position:absolute;top:646.037598px;left:106.182533px"><nobr>worldwide, excluding the United States, Canada, Mexico and the Caribbean. </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.541666px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:680.172485px;left:106.182533px"><nobr>All cover is subject to the terms and conditions of your policy wording. </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.541666px;font-weight:bold;color:#000000;"><span style="position:absolute;top:714.307434px;left:106.182533px"><nobr>IMPORTANT: </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.541666px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:748.442261px;left:106.182533px"><nobr>The confirmation of cover outlined above provides a basic overview of the cover provided </nobr></span><span style="position:absolute;top:765.509766px;left:106.182533px"><nobr>under your policy for you becoming ill with Coronavirus whilst abroad. This confirmation is </nobr></span><span style="position:absolute;top:782.577271px;left:106.182533px"><nobr>subject to the full terms and conditions of your policy which are found within your policy </nobr></span><span style="position:absolute;top:799.644714px;left:106.182533px"><nobr>wording. You must ensure you have provided us accurate information at the point of purchase </nobr></span><span style="position:absolute;top:816.712158px;left:106.182533px"><nobr>and ensure that you abide by the terms and conditions of your policy during the term of </nobr></span><span style="position:absolute;top:833.779602px;left:106.182533px"><nobr>insurance. Failure to do so may result in any claims being reduced or refused. </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.541666px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:884.981995px;left:106.182533px"><nobr>Yours Sincerely, </nobr></span></span></p><p><span style="font-family:Arial;font-size:10.541666px;font-weight:bold;color:#000000;"><span style="position:absolute;top:902.049500px;left:106.182533px"><nobr>The CoverForYou Support Team </nobr></span></span></p>']
+            }
+        },
+        mounted: function() {
+            this.$nextTick(function() {
+                this.pageNum = this.pageDatas.length;
+                this.pageContent = this.pageDatas[0];
+
+                this.setLeftMenuHeight();
+            })
+        },
+        watch: {
+            'currentPage': function(newVal, oldValue) {
+                // console.log('newVal ' + newVal, 'oldValue ' + oldValue);
+                if (newVal) {
+                    this.pageContent = this.pageDatas[this.currentPage - 1];
+                }
+            },
+            'zoomNum': function(newVal, oldValue) {
+                if (newVal) {
+                    this.zoomStyle = {
+                        'transform': 'scale(' + newVal + ')',
+                        '-webkit-transform': 'scale(' + newVal + ')',
+                        '-ms-transform': 'scale(' + newVal + ')',
+                        '-moz-transform': 'scale(' + newVal + ')',
+                        '-o-transform': 'scale(' + newVal + ')'
+                    }
+                }
+            }
+        },
+        methods: {
+            
+            changeCurrentPage: function(methods) {
+                switch (methods) {
+                    case 'first':
+                        this.currentPage = 1;
+                        break;
+                    case 'prev':
+                        if (this.currentPage > 1) {
+                            this.currentPage -= 1;
+                        }
+                        break;
+                    case 'next':
+                        if (this.currentPage < this.pageNum) {
+                            this.currentPage += 1;
+                        }
+                        break;
+                    case 'last':
+                        this.currentPage = this.pageNum;
+                        break;
+                }
+            },
+
+            gotoPage: function(page) {
+                console.log(page);
+                this.currentPage = page;
+            },
+            modifyZoom: function(type) {
+                switch (type) {
+                    case 'in':
+                        if (this.zoomNum < 2) {
+                            // this.zoomNum = (this.zoomNum + 0.1).toFixed(1);
+                            this.zoomNum = (parseFloat(this.zoomNum) + 0.1).toFixed(1);
+                        }
+                        break;
+                    case 'out':
+                        if (this.zoomNum > 0.5) {
+                            this.zoomNum = (parseFloat(this.zoomNum) - 0.1).toFixed(1);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                console.log(this.zoomNum);
+            },
+            setLeftMenuHeight: function() {
+                // this.asideHeight = document.body.scrollHeight - 60;
+                this.mainHeight = document.documentElement.clientHeight - 60 - 20;
+                // 60为头部导航高度， 46为menu高度， 40为上下padding
+                this.asideHeight = this.mainHeight - 20 - 46;
+            },
+            changePage: function(page) {
+                this.currentPage = page;
+                // this.pageContent = this.pageDatas[page - 1];
+            },
+            changeLeftMenu: function() {
+                this.ifMenuShow = !this.ifMenuShow;
+            }
+        }
+    });
+
+function gotoPage(page) {
+    console.log(page);
+    app.gotoPage(page);
+}
+
+</script>
+
+</html>
